@@ -18,23 +18,23 @@ def distances_calc(D0, phi, r, theta):
 
     return D, angle, Dx, Dy
 
-def _fr(r, sigma):
+def _fr(r, sigma2):
     if (r < 0):
         return 0
     else:
-        return r / sigma * np.exp(-r**2 / (2 * sigma))
+        return r / sigma2 * np.exp(-r**2 / (2 * sigma2))
 
-def _Fr(r, sigma):
+def _Fr(r, sigma2):
     if (r < 0):
         return 0
     else:
-        return 1 - np.exp(-r**2 / (2 * sigma))
+        return 1 - np.exp(-r**2 / (2 * sigma2))
 
 def _r(Fr, sigma2):
-#    if (Fr <= 0):
-#        return 0
-#    else:
-    return np.sqrt(-2 * sigma2 * np.log(1 - Fr))
+    if (Fr <= 0):
+        return 0
+    else:
+        return np.sqrt(-2 * sigma2 * np.log(1 - Fr))
 
 
 def monte_carlo(D0, phi_deg, sigma, N = 10000, rayleigh = False, cartesian = False):
@@ -72,6 +72,10 @@ def main():
     theta = U * np.pi * 2
 
     # Displaying histogram
+    fig, axs = plt.subplots()
+    axs.plot(theta)
+    axs.set_title("Graphique de θ")
+
     fig, axs = plt.subplots(2)
     axs[0].hist(theta, align="left")[0]
     axs[1].hist(U1, align="left")[0]
@@ -83,18 +87,24 @@ def main():
     # f(r)
     fig, axs = plt.subplots(3)
     fr = [[_fr(r, sigma) for r in np.linspace(0, 10, 1000)] for sigma in sigmar]
-    [axs[0].plot(r) for r in fr]
+    for i in range(len(sigmar)):
+        axs[0].plot(fr[i], label="σ = " + str(sigmar[i]))
     axs[0].set_title("f(r)")
+    axs[0].legend(loc='upper right', fontsize='large')
 
     # F(r)
     Fr = [[_Fr(r, sigma) for r in np.linspace(0, 10, 1000)] for sigma in sigmar]
-    [axs[1].plot(r) for r in Fr]
+    for i in range(len(sigmar)):
+        axs[1].plot(Fr[i], label="σ = " + str(sigmar[i]))
     axs[1].set_title("F(r)")
+    axs[1].legend(loc='lower right', fontsize='large')
 
     # r(Fr)
     r = [[_r(Fr, sigma) for Fr in np.linspace(0, 1, 100)] for sigma in sigmar]
-    [axs[2].plot(R) for R in r]
+    for i in range(len(sigmar)):
+        axs[2].plot(r[i], label="σ = " + str(sigmar[i]))
     axs[2].set_title("r(Fr)")
+    axs[2].legend(loc='upper left', fontsize='large')
 
     # Distance and angles values, generated from inverse r and standard Rayleigh
     D4,   A4   = monte_carlo(50,  15, 4, N = N)
@@ -170,6 +180,7 @@ def main():
             axs3_.plot(n[1][:-1], n[0] / N * 100, color="red")
 
             cov  = np.cov(Dx, Dy)
+            print("\n", distances[i], phis[i])
             print(cov)
 
             axs1[i * 2 + j][0].set_title("Dx (D0 = " + str(distances[i]) +
