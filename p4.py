@@ -1,20 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def distances_calc(D0, phi, r, theta):
-    D0x = D0 * np.cos(phi)
-    D0y = D0 * np.sin(phi)
 
-    rx = r * np.cos(theta + phi)
-    ry = r * np.sin(theta + phi)
-
-    Dx = D0x + rx
-    Dy = D0y + ry
+def distances_calc(D0, phi, theta, r):
+    Dx = D0*np.cos(phi) + r*np.cos(theta+phi)
+    Dy = D0*np.sin(phi) + r*np.sin(theta+phi)
 
     D = np.sqrt(Dx**2 + Dy**2)
-    angle = np.arctan(Dy / Dx)
-    #D     = np.sqrt((D0 ** 2) + (2 * D0 * r * np.cos(theta)) + (r ** 2))
-    #angle = phi + np.arctan(r * np.sin(theta)/(D0+r * np.cos(theta)))
+    angle = np.arctan2(Dy, Dx) * 180 / np.pi
 
     return D, angle, Dx, Dy
 
@@ -31,31 +24,31 @@ def _Fr(r, sigma2):
         return 1 - np.exp(-r**2 / (2 * sigma2))
 
 def _r(Fr, sigma2):
-    if (Fr <= 0):
+    if (Fr < 0):
         return 0
     else:
         return np.sqrt(-2 * sigma2 * np.log(1 - Fr))
 
 
-def monte_carlo(D0, phi_deg, sigma, N = 10000, rayleigh = False, cartesian = False):
+def monte_carlo(D0, phi_deg, sigma2, N = 10000, rayleigh=False, cartesian=False):
     phi  = phi_deg * np.pi / 180
     distances = []
-    angles    = []
+    angles = []
     Dx = []
     Dy = []
 
     r = []
-    theta = np.random.rand(10000) * np.pi * 2
+    theta = np.random.uniform(0, 2 * np.pi, N)
 
     if rayleigh == True:
-        r = np.random.rayleigh(sigma, N)
+        r = np.random.rayleigh(np.sqrt(sigma2), N)
     else:
-        r = [_r(u, sigma) for u in np.random.rand(N)]
+        r = [_r(u, sigma2) for u in np.random.uniform(0, 1, N)]
 
     for i in range(N):
-        mc = distances_calc(D0,  phi, theta[i], r[i])
+        mc = distances_calc(D0, phi, theta[i], r[i])
         distances.append(mc[0])
-        angles.append(mc[1] * 180 / np.pi)
+        angles.append(mc[1])
         Dx.append(mc[2])
         Dy.append(mc[3])
 
@@ -63,7 +56,6 @@ def monte_carlo(D0, phi_deg, sigma, N = 10000, rayleigh = False, cartesian = Fal
         return Dx, Dy
     else:
         return distances, angles
-
 
 def main():
     N     = 10000
@@ -128,27 +120,27 @@ def main():
 
     # Scatter plot of theta vs r
     fig, ax = plt.subplots()
-    ax.scatter(theta, [_r(u, 4) for u in np.random.rand(N)])
+    ax.scatter(theta, [_r(u, 4) for u in np.random.rand(N)],s=1)
     ax.set_title("Nuage de point de r en fonction de θ")
 
     # Scatter plot of distance vs angle
     fig, axs = plt.subplots(2, 2)
-    axs[0][0].scatter(*monte_carlo(50,  15, 4, N = N))
+    axs[0][0].scatter(*monte_carlo(50,  15, 4, N = N),s=1)
     axs[0][0].set_title("D0 = 50, phi = 15")
     axs[0][0].set_ylabel("Angle phi")
     axs[0][0].set_xlabel("Distance D")
-    axs[0][1].scatter(*monte_carlo(100, 15, 16, N = N))
+    axs[0][1].scatter(*monte_carlo(100, 15, 16, N = N),s=1)
     axs[0][1].set_title("D0 = 100, phi = 15")
     axs[0][1].set_ylabel("Angle phi")
     axs[0][1].set_xlabel("Distance D")
-    axs[1][0].scatter(*monte_carlo(50,  30, 4, N = N))
+    axs[1][0].scatter(*monte_carlo(50,  30, 4, N = N),s=1)
     axs[1][0].set_title("D0 = 50, phi = 30")
     axs[1][0].set_ylabel("Angle phi")
     axs[1][0].set_xlabel("Distance D")
-    axs[1][1].scatter(*monte_carlo(100, 30, 16, N = N))
+    axs[1][1].scatter(*monte_carlo(100, 30, 16, N = N),s=1)
     axs[1][1].set_title("D0 = 100, phi = 30")
-    axs[0][1].set_ylabel("Angle phi")
-    axs[0][1].set_xlabel("Distance D")
+    axs[1][1].set_xlabel("Distance D")
+    axs[1][1].set_ylabel("Angle phi")
 
     fig, axs1 = plt.subplots(4, 2)
     fig.tight_layout()
@@ -169,7 +161,7 @@ def main():
             Dx, Dy = monte_carlo(distances[i], phis[j], sigma2, N = N, cartesian = True)
             axs1[i * 2 + j][0].plot(Dx)
             axs1[i * 2 + j][1].plot(Dy)
-            axs2[i][j].scatter(Dx, Dy)
+            axs2[i][j].scatter(Dx, Dy, s=1)
 
             n = axs3[i * 2 + j][0].hist(Dx, align="left")
             axs3_ = axs3[i * 2 + j][0].twinx()
