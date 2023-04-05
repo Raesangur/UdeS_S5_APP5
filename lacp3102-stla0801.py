@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as sp
 
 
 def distances_calc(D0, phi, theta, r):
@@ -66,13 +67,13 @@ def main():
     # Displaying histogram
     fig, axs = plt.subplots()
     axs.plot(theta)
-    axs.set_title("Graphique de θ")
+    axs.set_title("Graphique de θ - 4.1 a)")
 
     fig, axs = plt.subplots(2)
-    axs[0].hist(theta, align="left")[0]
-    axs[1].hist(U1, align="left")[0]
-    axs[0].set_title("Histogramme de la distribution de θ")
-    axs[1].set_title("Histogramme de la distribution de U[0, 1]")
+    axs[0].hist(U1, align="left")[0]
+    axs[1].hist(theta, align="left")[0]
+    axs[0].set_title("Histogramme de la distribution de U[0, 1] - 4.1 b)")
+    axs[1].set_title("Histogramme de la distribution de θ")
 
     sigmar = [0.25, 1, 4, 9, 16]
 
@@ -81,7 +82,7 @@ def main():
     fr = [[_fr(r, sigma) for r in np.linspace(0, 10, 1000)] for sigma in sigmar]
     for i in range(len(sigmar)):
         axs[0].plot(fr[i], label="σ = " + str(sigmar[i]))
-    axs[0].set_title("f(r)")
+    axs[0].set_title("f(r) - 4.1 c)")
     axs[0].legend(loc='upper right', fontsize='large')
 
     # F(r)
@@ -98,53 +99,55 @@ def main():
     axs[2].set_title("r(Fr)")
     axs[2].legend(loc='upper left', fontsize='large')
 
-    # Distance and angles values, generated from inverse r and standard Rayleigh
-    D4,   A4   = monte_carlo(50,  15, 4, N = N)
-    D16,  A16  = monte_carlo(100, 15, 16, N = N)
-    Dr4,  Ar4  = monte_carlo(50,  15, 4,  N = N, rayleigh = True)
-    Dr16, Ar16 = monte_carlo(100, 15, 16, N = N, rayleigh = True)
+    fig, ax = plt.subplots()
+    ax.plot([_r(u, 4) for u in np.random.uniform(0, 1, N)])
+    ax.set_title("10000 valeurs de r - 4.1 f)")
 
+    # Distance and angles values, generated from inverse r and standard Rayleigh
     fig, axs = plt.subplots(2, 2)
-    axs[0][0].hist(D4)
-    axs[0][1].hist(D16)
-    axs[1][0].hist(Dr4)
-    axs[1][1].hist(Dr16)
-    axs[0][0].set_title("r inverse (σ = 4)")
-    axs[0][0].set_xlabel("Distance D")
-    axs[0][1].set_title("r inverse (σ = 16)")
-    axs[0][1].set_xlabel("Distance D")
-    axs[1][0].set_title("rayleigh (σ = 4)")
-    axs[1][0].set_xlabel("Distance D")
-    axs[1][1].set_title("rayleigh (σ = 16)")
-    axs[1][1].set_xlabel("Distance D")
+    axs[0][0].hist([_r(u, 4) for u in np.random.uniform(0, 1, N)], bins=100)
+    axs[0][1].hist([_r(u, 16) for u in np.random.uniform(0, 1, N)], bins=100)
+    axs[1][0].hist(np.random.rayleigh(np.sqrt(4), N), bins=100)
+    axs[1][1].hist(np.random.rayleigh(np.sqrt(16), N), bins=100)
+    axs[0][0].set_title("r inverse (σ² = 4) - 4.1 g)")
+    axs[0][0].set_xlabel("Module de l'erreur")
+    axs[0][1].set_title("r inverse (σ² = 16) - 4.1 g)")
+    axs[0][1].set_xlabel("Module de l'erreur")
+    axs[1][0].set_title("rayleigh (σ² = 4) - 4.1 g)")
+    axs[1][0].set_xlabel("Module de l'erreur")
+    axs[1][1].set_title("rayleigh (σ² = 16) - 4.1 g)")
+    axs[1][1].set_xlabel("Module de l'erreur")
 
     # Scatter plot of theta vs r
-    fig, ax = plt.subplots()
-    ax.scatter(theta, [_r(u, 4) for u in np.random.rand(N)],s=1)
-    ax.set_title("Nuage de point de r en fonction de θ")
+    fig, axs = plt.subplots(2)
+    axs[0].scatter(theta, [_r(u, 4) for u in np.random.rand(N)],s=1)
+    axs[0].set_title("Nuage de point de r en fonction de θ (σ² = 4) - 4.2")
+    axs[1].scatter(theta, [_r(u, 16) for u in np.random.rand(N)],s=1)
+    axs[1].set_title("Nuage de point de r en fonction de θ (σ² = 16) - 4.2")
 
     # Scatter plot of distance vs angle
     fig, axs = plt.subplots(2, 2)
     axs[0][0].scatter(*monte_carlo(50,  15, 4, N = N),s=1)
-    axs[0][0].set_title("D0 = 50, phi = 15")
-    axs[0][0].set_ylabel("Angle phi")
-    axs[0][0].set_xlabel("Distance D")
+    axs[0][0].set_title("D0 = 50, phi = 15 - 4.3")
+    axs[0][0].set_ylabel("Distance Dy")
+    axs[0][0].set_xlabel("Distance Dx")
     axs[0][1].scatter(*monte_carlo(100, 15, 16, N = N),s=1)
-    axs[0][1].set_title("D0 = 100, phi = 15")
-    axs[0][1].set_ylabel("Angle phi")
-    axs[0][1].set_xlabel("Distance D")
+    axs[0][1].set_title("D0 = 100, phi = 15 - 4.3")
+    axs[0][1].set_ylabel("Distance Dy")
+    axs[0][1].set_xlabel("Distance Dx")
     axs[1][0].scatter(*monte_carlo(50,  30, 4, N = N),s=1)
-    axs[1][0].set_title("D0 = 50, phi = 30")
-    axs[1][0].set_ylabel("Angle phi")
-    axs[1][0].set_xlabel("Distance D")
+    axs[1][0].set_title("D0 = 50, phi = 30 - 4.3")
+    axs[1][0].set_ylabel("Distance Dy")
+    axs[1][0].set_xlabel("Distance Dx")
     axs[1][1].scatter(*monte_carlo(100, 30, 16, N = N),s=1)
-    axs[1][1].set_title("D0 = 100, phi = 30")
-    axs[1][1].set_xlabel("Distance D")
-    axs[1][1].set_ylabel("Angle phi")
+    axs[1][1].set_title("D0 = 100, phi = 30 - 4.3")
+    axs[1][1].set_ylabel("Distance Dy")
+    axs[1][1].set_xlabel("Distance Dx")
 
     fig, axs1 = plt.subplots(4, 2)
     fig.tight_layout()
     fig, axs2 = plt.subplots(2, 2)
+    fig.tight_layout()
     fig, axs3 = plt.subplots(4, 2)
     fig.tight_layout()
 
@@ -172,28 +175,28 @@ def main():
             axs3_.plot(n[1][:-1], n[0] / N * 100, color="red")
 
             cov  = np.cov(Dx, Dy)
-            print("\n", distances[i], phis[i])
+            print("\n", distances[i], phis[j])
             print(cov)
 
             axs1[i * 2 + j][0].set_title("Dx (D0 = " + str(distances[i]) +
-                                         " & phi = " + str(phis[j]) + ")")
+                                         " & phi = " + str(phis[j]) + ") - 4.4")
             axs1[i * 2 + j][1].set_title("Dx (D0 = " + str(distances[i]) +
-                                         " & phi = " + str(phis[j]) + ")")
+                                         " & phi = " + str(phis[j]) + ") - 4.4")
             axs1[i * 2 + j][0].set_ylabel("Distance D")
             axs1[i * 2 + j][1].set_ylabel("Distance D")
 
-            axs2[i][j].set_title("Nuage de point de [Dx, Dy]\n" +
+            axs2[i][j].set_title("Nuage de point de [Dx, Dy] - 4.4\n" +
                                  "(D0 = " + str(distances[i]) +
                                  " & phi = " + str(phis[j]) + ")")
-            axs2[i][j].set_ylabel("Angle phi")
-            axs2[i][j].set_xlabel("Distance D")
+            axs2[i][j].set_ylabel("Distance Dy")
+            axs2[i][j].set_xlabel("Distance Dx")
 
-            axs3[i * 2 + j][0].set_title("Histogramme de Dx" + 
+            axs3[i * 2 + j][0].set_title("Histogramme de Dx - 4.5" + 
                                          " (D0 = " + str(distances[i]) + " & phi = " + str(phis[j]) + ")" +
-                                         "\n µ = " + str(np.average(Dx)) + " & σ = " + str(np.std(Dx)))
-            axs3[i * 2 + j][1].set_title("Histogramme de Dy" +
+                                         "\n X̄ = " + str(np.average(Dx)) + " & s = " + str(np.std(Dx)))
+            axs3[i * 2 + j][1].set_title("Histogramme de Dy - 4.5" +
                                          " (D0 = " + str(distances[i]) + " & phi = " + str(phis[j]) + ")" +
-                                         "\n µ = " + str(np.average(Dy)) + " & σ = " + str(np.std(Dy)))
+                                         "\n X̄ = " + str(np.average(Dy)) + " & s = " + str(np.std(Dy)))
             axs3[i * 2 + j][0].set_ylabel("n")
             axs3_.set_ylabel("%")
 
